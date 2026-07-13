@@ -75,6 +75,8 @@ pm2 save
 - **Baileys is an unofficial WhatsApp client.** There is a small risk to the number under
   WhatsApp's terms. Keep volume low and use your own number.
 - `auth/`, `conversations.json`, and `.env` contain secrets/session data and are git-ignored.
+- A committed pre-commit hook (`.githooks/pre-commit`) blocks accidental commits of secrets or
+  session data. After cloning, enable it with `git config core.hooksPath .githooks`.
 - Web search is powered by the agent's **Web search (Grounding with Bing Search)** tool,
   the official successor to the retired key-based Bing Search API. The bot calls the agent's
   OpenAI-compatible **Responses** endpoint and chains turns with `previous_response_id`.
