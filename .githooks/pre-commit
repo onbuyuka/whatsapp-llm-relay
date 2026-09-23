@@ -5,7 +5,7 @@
 #
 
 # 1) Block sensitive paths from ever being staged.
-blocked_paths=$(git diff --cached --name-only | grep -E '(^|/)\.env$|(^|/)conversations\.json$|(^|/)auth/' || true)
+blocked_paths=$(git diff --cached --name-only | grep -E '(^|/)\.env$|(^|/)(conversations|group-history)\.json(\.tmp)?$|(^|/)auth/' || true)
 if [ -n "$blocked_paths" ]; then
   echo "pre-commit: refusing to commit secret/session files:"
   echo "$blocked_paths" | sed 's/^/  - /'

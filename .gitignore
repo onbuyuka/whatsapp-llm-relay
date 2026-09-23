@@ -4,4 +4,6 @@ dist/
 auth/
 conversations.json
 conversations.json.tmp
+group-history.json
+group-history.json.tmp
 *.log

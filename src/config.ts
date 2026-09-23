@@ -20,6 +20,14 @@ function withApiVersion(url: string, apiVersion: string): string {
   return `${url}${url.includes('?') ? '&' : '?'}api-version=${apiVersion}`;
 }
 
+function positiveInteger(name: string, fallback: string): number {
+  const value = Number(process.env[name] ?? fallback);
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`${name} must be a positive integer.`);
+  }
+  return value;
+}
+
 const allowlistNumbers = (process.env.ALLOWLIST_NUMBERS ?? '')
   .split(',')
   .map((n) => n.trim())
@@ -32,7 +40,8 @@ export const config = {
   ),
   allowlistJids: new Set(allowlistNumbers.map(toJid)),
   idleResetMs: Number(process.env.IDLE_RESET_HOURS ?? '8') * 60 * 60 * 1000,
-  maxMessageChars: Number(process.env.MAX_MESSAGE_CHARS ?? '2000'),
+  maxMessageChars: positiveInteger('MAX_MESSAGE_CHARS', '2000'),
+  groupHistoryMessages: positiveInteger('GROUP_HISTORY_MESSAGES', '50'),
 };
 
 if (config.allowlistJids.size === 0) {

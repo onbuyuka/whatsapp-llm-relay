@@ -1,7 +1,8 @@
 import makeWASocket, {
   DisconnectReason,
-  useMultiFileAuthState,
   fetchLatestBaileysVersion,
+  jidNormalizedUser,
+  useMultiFileAuthState,
 } from '@whiskeysockets/baileys';
 import qrcode from 'qrcode-terminal';
 import pino from 'pino';
@@ -11,13 +12,22 @@ import { dirname, resolve } from 'node:path';
 const AUTH_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'auth');
 
 export interface MessageContext {
-  jid: string;
+  senderJid: string;
+  senderName: string;
+  conversationJid: string;
+  isGroup: boolean;
+  botWasMentioned: boolean;
+  receivedAt: number;
   text: string;
   reply: (text: string) => Promise<void>;
   sendTyping: () => Promise<void>;
 }
 
 export type MessageHandler = (ctx: MessageContext) => Promise<void>;
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 /**
  * Connects to WhatsApp via Baileys (outbound, like WhatsApp Web — no webhook or
@@ -71,23 +81,71 @@ export async function startWhatsApp(onMessage: MessageHandler): Promise<void> {
     for (const msg of messages) {
       if (!msg.message || msg.key.fromMe) continue;
 
-      // The chat address to reply to (may be a @lid on newer WhatsApp).
+      // The chat address to reply to (may be a @lid on newer direct chats).
       const remoteJid = msg.key.remoteJid ?? undefined;
-      if (!remoteJid || remoteJid.endsWith('@g.us') || remoteJid === 'status@broadcast') {
+      if (!remoteJid || remoteJid === 'status@broadcast') {
         continue;
       }
+      const isGroup = remoteJid.endsWith('@g.us');
 
-      // The sender's real phone-number JID, used for allowlist + conversation key.
-      // On the new addressing scheme remoteJid is a @lid, so prefer senderPn.
-      const senderPn = (msg.key as { senderPn?: string }).senderPn;
-      const senderJid = senderPn ?? remoteJid;
+      // Prefer the phone-number JID so allowlisting also works with LID addressing.
+      const senderJid = isGroup
+        ? msg.key.participantPn ?? msg.key.senderPn ?? msg.key.participant
+        : msg.key.senderPn ?? remoteJid;
+      if (!senderJid) continue;
 
-      const text =
+      let text =
         msg.message.conversation ?? msg.message.extendedTextMessage?.text ?? '';
       if (!text.trim()) continue;
 
+      let botWasMentioned = false;
+      if (isGroup) {
+        const mentionedJids =
+          msg.message.extendedTextMessage?.contextInfo?.mentionedJid ?? [];
+        const botJids = [
+          sock.user?.id,
+          sock.user?.jid,
+          sock.user?.lid,
+          state.creds.me?.id,
+          state.creds.me?.jid,
+          state.creds.me?.lid,
+        ]
+          .filter((jid): jid is string => Boolean(jid))
+          .map(jidNormalizedUser);
+        botWasMentioned = mentionedJids
+          .map(jidNormalizedUser)
+          .some((jid) => botJids.includes(jid));
+
+        if (botWasMentioned) {
+          const botNames = [sock.user?.name, state.creds.me?.name].filter(
+            (name): name is string => Boolean(name),
+          );
+          for (const botName of botNames) {
+            text = text.replace(
+              new RegExp(`@${escapeRegExp(botName)}\\s*`, 'gi'),
+              '',
+            );
+          }
+          for (const botJid of botJids) {
+            const mentionHandle = botJid.split('@')[0];
+            text = text.replace(new RegExp(`@${mentionHandle}\\b`, 'g'), '');
+          }
+          if (!text.trim()) continue;
+        }
+
+        if (mentionedJids.length > 0) {
+          console.log(`Group mention received (targets bot: ${botWasMentioned}).`);
+        }
+      }
+
+      const normalizedSenderJid = jidNormalizedUser(senderJid);
       const ctx: MessageContext = {
-        jid: senderJid,
+        senderJid: normalizedSenderJid,
+        senderName: msg.pushName?.trim() || normalizedSenderJid.split('@')[0],
+        conversationJid: isGroup ? remoteJid : normalizedSenderJid,
+        isGroup,
+        botWasMentioned,
+        receivedAt: Date.now(),
         text: text.trim(),
         reply: async (t) => {
           await sock.sendMessage(remoteJid, { text: t });
