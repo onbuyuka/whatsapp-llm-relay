@@ -98,6 +98,11 @@ together with the Azure Identity pin.
 `npm test` explicitly selects the offline identity suite; the manual live-agent
 smoke script is not part of the automated tests.
 
+[npm configuration](.npmrc) selects the public registry. Lockfiles retain exact
+versions, integrity hashes and Git commit references but omit registry-specific
+tarball URLs so local corporate caches cannot make Dependabot depend on
+inaccessible feeds. No feed credentials are needed or stored.
+
 ## Keeping it running on the VM
 
 Use a process manager so it restarts and keeps the WhatsApp session alive:
