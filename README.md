@@ -75,6 +75,20 @@ group participants before enabling the bot in a group.
 - `/reset` or `/new` — start a fresh conversation. In a group, mention the bot in the
   command message; this also clears that group's locally retained message history.
 
+## Dependency maintenance
+
+[Dependabot](.github/dependabot.yml) checks npm dependencies weekly. Minor and
+patch version updates are grouped; major updates stay separate. Security updates
+run independently when GitHub detects a vulnerable dependency. Run
+`npm run typecheck` and `npm run build` before updating the VM; dependency commits
+do not restart or deploy the running relay.
+
+Azure Identity is temporarily pinned to `4.13.0`: newer 4.x releases currently
+require the MSAL Node versions affected by
+[GHSA-xcx6-jx8p-x3h5](https://github.com/advisories/GHSA-xcx6-jx8p-x3h5).
+Review that dependency chain before removing the pin. This version retains
+support for the documented Node.js 20+ runtime.
+
 ## Keeping it running on the VM
 
 Use a process manager so it restarts and keeps the WhatsApp session alive:
