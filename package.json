@@ -11,7 +11,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/identity.test.mjs"
   },
   "dependencies": {
     "@azure/identity": "4.13.0",
@@ -25,5 +26,10 @@
     "@types/qrcode-terminal": "^0.12.2",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
+  },
+  "overrides": {
+    "@azure/msal-node@3": {
+      "uuid": "^11.1.1"
+    }
   }
 }

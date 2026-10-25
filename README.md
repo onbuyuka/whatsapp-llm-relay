@@ -80,14 +80,23 @@ group participants before enabling the bot in a group.
 [Dependabot](.github/dependabot.yml) checks npm dependencies weekly. Minor and
 patch version updates are grouped; major updates stay separate. Security updates
 run independently when GitHub detects a vulnerable dependency. Run
-`npm run typecheck` and `npm run build` before updating the VM; dependency commits
-do not restart or deploy the running relay.
+`npm run typecheck`, `npm test` and `npm run build` before updating the VM;
+dependency commits do not restart or deploy the running relay.
 
 Azure Identity is temporarily pinned to `4.13.0`: newer 4.x releases currently
 require the MSAL Node versions affected by
 [GHSA-xcx6-jx8p-x3h5](https://github.com/advisories/GHSA-xcx6-jx8p-x3h5).
 Review that dependency chain before removing the pin. This version retains
 support for the documented Node.js 20+ runtime.
+
+The scoped MSAL 3 override uses patched UUID 11 while retaining the named `v4()`
+API used by MSAL. It addresses
+[GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq).
+The identity tests exercise UUID generation, token-cache initialization and
+credential construction without requesting real tokens. Reassess this override
+together with the Azure Identity pin.
+`npm test` explicitly selects the offline identity suite; the manual live-agent
+smoke script is not part of the automated tests.
 
 ## Keeping it running on the VM
 
