@@ -124,3 +124,12 @@ pm2 save
 - Web search is powered by the agent's **Web search (Grounding with Bing Search)** tool,
   the official successor to the retired key-based Bing Search API. The bot calls the agent's
   OpenAI-compatible **Responses** endpoint and chains turns with `previous_response_id`.
+
+## License
+
+The original code and documentation in this repository are licensed under the
+[MIT License](LICENSE).
+
+Third-party code, dependencies, data, images, and other content retain their own
+licenses and terms and are not covered by this license. No trademark rights are
+granted.

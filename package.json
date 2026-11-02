@@ -1,6 +1,7 @@
 {
   "name": "whatsapp-llm-relay",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "description": "Personal WhatsApp bot that relays messages to an Azure AI Foundry agent with Grounding with Bing Search.",
