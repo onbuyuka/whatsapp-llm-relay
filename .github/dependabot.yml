@@ -5,6 +5,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Our local npm mirror only serves releases about a week after publication, so
+    # wait 8 days before proposing a version (security updates are not delayed).
+    cooldown:
+      default-days: 8
     groups:
       minor-and-patch:
         applies-to: version-updates
@@ -14,12 +18,11 @@ updates:
           - minor
           - patch
     # Majors held back on purpose; see the "remaining PRs" review (2026-10-25).
-    # @azure/identity is pinned to 4.13.0: newer releases need Node 22+ (the relay
-    # supports Node 20) and the 4.14 upgrade reported two vulnerable packages.
-    # @types/node follows the Node runtime.
+    # @azure/identity is pinned to exactly 4.13.0: 4.13.1+ pulls @azure/msal-node 6
+    # (advisory GHSA-xcx6-jx8p-x3h5) and the fixed 4.14.1 needs Node 22+, while the
+    # relay supports Node 20. @types/node follows the Node runtime.
     ignore:
       - dependency-name: "@azure/identity"
-        update-types: ["version-update:semver-minor", "version-update:semver-major"]
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
       - dependency-name: "@types/node"
